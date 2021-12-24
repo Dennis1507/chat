@@ -13,6 +13,7 @@ io.on('connection', (socket) => {
 	console.log('New Connection: ', socket.id);
 	// Listen for a 'new user' event
 	socket.on('new user', (username, res) => {
+		if (!res) return socket.emit('message', 'Your client is not supported.');
 		if (Object.values(usernames).includes(username)) {
 			res([400, 'Username already taken.']);
 		} else {
