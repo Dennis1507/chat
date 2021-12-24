@@ -9,6 +9,7 @@
   "author": "Dennis#4064",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^4.1.2",
     "dotenv": "^10.0.0",
     "socket.io": "^4.4.0",
     "socket.io-client": "^4.4.0",
