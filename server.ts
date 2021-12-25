@@ -16,7 +16,10 @@ io.on('connection', (socket) => {
 	// Listen for a 'new user' event
 	socket.on('new user', (username, res) => {
 		if (!res) return socket.emit('message', 'Your client is not supported.');
-		if (Object.values(usernames).includes(username)) {
+		username = username.trim();
+		if (username.length < 1) {
+			res([400, 'Username must be at least 1 character long.']);
+		} else if (Object.values(usernames).filter((name) => name.toLowerCase() === username.toLowerCase()).length > 0) {
 			res([400, 'Username already taken.']);
 		} else {
 			usernames[socket.id] = username;
@@ -32,16 +35,19 @@ io.on('connection', (socket) => {
 				switch (command) {
 				case 'nick':
 					if (args.length > 0) {
-						const newUsername = args.join(' ');
-						if (Object.values(usernames).includes(newUsername)) {
-							socket.emit('message', `${chalk.yellow(newUsername)} is already taken.`);
-						} else {
-							const oldUsername = usernames[socket.id];
-							usernames[socket.id] = newUsername;
-							socket.emit('message', `You are now known as ${newUsername}.`);
-							socket.to('global').emit('message', `${chalk.yellow(oldUsername)} changed their name to ${chalk.green(newUsername)}.`);
+						const newUsername = args.join(' ').trim();
+						if (newUsername.length < 1) return socket.emit('message', 'Username must be at least 1 character long.');
+						for (const key in usernames) {
+							if (usernames[key].toLowerCase() === newUsername.toLowerCase() && key !== socket.id) {
+								return socket.emit('message', `${chalk.yellow(newUsername)} is already taken.`);
+							}
 						}
-					} else {
+						const oldUsername = usernames[socket.id];
+						usernames[socket.id] = newUsername;
+						socket.emit('message', `You are now known as ${newUsername}.`);
+						socket.to('global').emit('message', `${chalk.yellow(oldUsername)} changed their name to ${chalk.green(newUsername)}.`);
+					}
+					else {
 						socket.emit('message', 'You must specify a new username.');
 					}
 					break;
@@ -49,8 +55,8 @@ io.on('connection', (socket) => {
 					if (args.length > 1) {
 						const [target, ...message] = args;
 						for (const [id, username] of Object.entries(usernames)) {
-							if (username === target) {
-								io.to(socket.id).emit('message', chalk.green(`You whisper to ${target}: `) + message.join(' '));
+							if (username.toLowerCase() === target.toLowerCase()) {
+								io.to(socket.id).emit('message', chalk.green(`You whisper to ${username}: `) + message.join(' '));
 								io.to(id).emit('message', `${chalk.green(usernames[socket.id] + ' whispers to you:')} ${message.join(' ')}`);
 								break;
 							}
