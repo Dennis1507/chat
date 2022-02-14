@@ -12,6 +12,7 @@ const usernames = {} as { [key: string]: string };
 
 // Listen for a connection
 io.on('connection', (socket) => {
+	console.log(socket);
 	console.log('New Connection: ', socket.id);
 	// Listen for a 'new user' event
 	socket.on('new user', (username, res) => {
@@ -25,6 +26,7 @@ io.on('connection', (socket) => {
 			usernames[socket.id] = username;
 			socket.join('global');
 			socket.to('global').emit('message', `${username} has joined the chat.`);
+			console.log(socket.id + ' registered as ' + username);
 			res([200, `You joined the chat. There's ${Object.keys(usernames).length - 1} other user${Object.keys(usernames).length - 1 !== 1 ? 's' : ''} online.`]);
 		}
 	});
